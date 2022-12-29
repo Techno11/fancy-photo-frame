@@ -1,5 +1,5 @@
 import {
-  Box, CircularProgress, Dialog,
+  Box, Button, CircularProgress, Dialog, DialogActions,
   DialogContent,
   DialogContentText,
   DialogTitle,
@@ -54,6 +54,18 @@ const Home = () => {
   // Startup message
   const [startupMessage, setStartupMessage] = useState<string>("");
 
+  // Toggle Debug
+  const [showDebug, setShowDebug] = useState<boolean>(false);
+
+  // Debug stats
+  const [debugStats, setDebugStats] = useState<{ last_time: Date, last_weather: Date, last_forecast: Date, last_photo: Date, socket_connected: string }>({
+    last_time: new Date(NaN),
+    last_weather: new Date(NaN),
+    last_forecast: new Date(NaN),
+    last_photo: new Date(NaN),
+    socket_connected: "Unknown"
+  });
+
   // Socket
   const socket = useSocket();
 
@@ -81,6 +93,11 @@ const Home = () => {
     console.log("Startup complete");
   }
 
+  const getPhoto = () => socket.getPhoto().then(url => {
+    if (photo.length > 0) URL.revokeObjectURL(photo);
+    setPhoto(url);
+  }).catch(console.log);
+
   useEffect(() => {
     // Wifi networks
     socket.addListener("need-wifi", needWifi);
@@ -98,10 +115,6 @@ const Home = () => {
     socket.addListener("startup-complete", startupComplete);
 
     // Photo Data
-    const getPhoto = () => socket.getPhoto().then(url => {
-      if (photo.length > 0) URL.revokeObjectURL(photo);
-      setPhoto(url);
-    }).catch(console.log);
     socket.removeListener("photo", getPhoto);
     socket.addListener("photo", getPhoto);
     getPhoto();
@@ -113,10 +126,16 @@ const Home = () => {
     socket.getControl();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Fetch debug stats on load of dialog
   useEffect(() => {
-
-    console.log("Show Startup?", showStartup, "Show Wifi?", showWifiConfig, "Message", startupMessage);
-  }, [showStartup, showWifiConfig, startupMessage]);
+    setDebugStats({
+      socket_connected: socket.getSocketStatus() ? "Connected" : "Disconnected",
+      last_time: socket.getLastTime(),
+      last_weather: socket.getLastWeather(),
+      last_forecast: socket.getLastForecast(),
+      last_photo: socket.getLastPhoto()
+    });
+  }, [showDebug]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const openWifi = () => {
     socket.forceWifi();
@@ -160,14 +179,32 @@ const Home = () => {
       <WifiConnect networks={avalNetworks} onClose={() => setShowWifiConfig(false)} open={showWifiConfig}/>
 
       {/* Startup Dialog */}
-      {!showWifiConfig &&
-        <Dialog open={showStartup} sx={{zIndex: 101}}>
-          <DialogTitle>Starting Up...</DialogTitle>
-          <DialogContent>
-            <DialogContentText key={startupMessage}><CircularProgress size={1}/> {startupMessage}</DialogContentText>
-          </DialogContent>
-        </Dialog>
-      }
+      <Dialog open={showStartup} sx={{zIndex: 101}}>
+        <DialogTitle>Starting Up...</DialogTitle>
+        <DialogContent>
+          <DialogContentText key={startupMessage}><CircularProgress size={1}/> {startupMessage}</DialogContentText>
+        </DialogContent>
+      </Dialog>
+
+      {/* Debug Window Trigger */}
+      <Box sx={{position: "absolute", bottom: 0, right: 0, zIndex: 100, width: 2, height: 2}}
+           onClick={() => setShowDebug(true)}/>
+
+      {/* Debug Window */}
+      <Dialog open={showDebug} sx={{zIndex: 101}} onClose={() => setShowDebug(false)}>
+        <DialogTitle>Debug Stats</DialogTitle>
+        <DialogContent>
+          <DialogContentText>Time Sent: {debugStats.last_time.toJSON()}</DialogContentText>
+          <DialogContentText>Forecast Sent: {debugStats.last_forecast.toJSON()}</DialogContentText>
+          <DialogContentText>Weather Sent: {debugStats.last_weather.toJSON()}</DialogContentText>
+          <DialogContentText>Photo Sent: {debugStats.last_photo.toJSON()}</DialogContentText>
+          <DialogContentText>Internet Connected: {gotInternet ? "Connected" : "Disconnected"}</DialogContentText>
+          <DialogContentText>Socket Connected: {debugStats.socket_connected}</DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowDebug(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
     </>
   )
 }

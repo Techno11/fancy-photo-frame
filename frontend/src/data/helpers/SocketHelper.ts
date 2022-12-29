@@ -6,6 +6,10 @@ export default class SocketHelper {
   private _path: string;
   private _socket: Socket;
   private _bgController: {weatherTheme: "snow" | "rain" | "clear" | "windy", greetingTheme: Theme}
+  private _lastTime: Date = new Date(NaN);
+  private _lastWeather: Date = new Date(NaN);
+  private _lastForecast: Date = new Date(NaN);
+  private _lastPhoto: Date = new Date(NaN);
 
   private _emitter = new EventEmitter();
 
@@ -41,7 +45,14 @@ export default class SocketHelper {
         }
       }
 
-    }));
+      // Store dates of last recieved messages
+      if(e === "time") this._lastTime = new Date();
+      else if(e === "weather") this._lastWeather = new Date();
+      else if(e === "forecast") this._lastForecast = new Date();
+      else if(e === "photo") this._lastPhoto = new Date();
+    }
+
+    ));
 
     // Connect socket
     this._socket.connect();
@@ -86,6 +97,7 @@ export default class SocketHelper {
    * Get random photo
    */
   public getPhoto(): Promise<string> {
+    this._lastPhoto = new Date();
     return fetch(`http://localhost:8008/api/randomPhoto`).then(res => res.blob()).then(blob => URL.createObjectURL(blob));
   }
 
@@ -167,5 +179,32 @@ export default class SocketHelper {
    */
   public getGotInternet() {
     this._socket.emit("get-got-internet");
+  }
+
+  /**
+   * Get Socket connection status
+   */
+  public getSocketStatus() {
+    return this._socket.connected;
+  }
+
+  /** Get last time message received time */
+  public getLastTime() {
+    return this._lastTime;
+  }
+
+  /** Get last weather message received time */
+  public getLastWeather() {
+    return this._lastWeather;
+  }
+
+  /** Get last forecast message received time */
+  public getLastForecast() {
+    return this._lastForecast;
+  }
+
+  /** Get last photo message received time */
+  public getLastPhoto() {
+    return this._lastPhoto;
   }
 }

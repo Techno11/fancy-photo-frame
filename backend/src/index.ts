@@ -188,7 +188,6 @@ async function startupWifi(): Promise<boolean> {
 }
 
 async function internetPing() {
-  console.log("Pinging internet");
   await got('https://google.com').then(async () => {
     // Emit connection if we didn't have internet before
     if(!gotInternet.ref) {
