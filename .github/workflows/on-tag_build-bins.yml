@@ -1,0 +1,93 @@
+name: Build Binaries
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  publish-x86:
+    name: Build fancy-photo-frame for ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            name: Windows
+            artifact_name: fpf-backend.exe
+            asset_name: fpf-windows.exe
+            cmd: build-binary-win
+            
+          - os: ubuntu-latest
+            name: Linux amd64
+            artifact_name: fpf-backend
+            asset_name: fpf-linux-amd64
+            cmd: build-binary-linux
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14.x
+      - name: Install, Compile, and Build Binary
+        run: |
+          npm run install-all
+          npm run ${{ matrix.cmd }}
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: /bin/${{ matrix.artifact_name }}
+          asset_name: ${{ matrix.asset_name }}
+          tag: ${{ github.ref }}
+          
+  publish-arm:
+    name: Build fancy-photo-frame  for ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        include:            
+          - os: ubuntu-latest
+            name: Linux arm64v8
+            artifact_name: fpf-backend
+            asset_name: fpf-linux-arm64v8
+            cmd: build-binary-linux
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+
+      
+      # Install emulation things for Docker
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      # Build frontend
+      - name: Install and Build Frontend
+        run: |
+          npm run prep-arm-build
+
+      # Build binary in a docker image so we can build on an ARM platform
+      - name: Build Binary
+        run: |-
+          DOCKER_BUILDKIT=1 docker build -f ./backend/GithubActions.Dockerfile -o out .
+
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: out/${{ matrix.artifact_name }}
+          asset_name: ${{ matrix.asset_name }}
+          tag: ${{ github.ref }}

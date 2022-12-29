@@ -1,0 +1,34 @@
+{
+  "name": "fancy-frame-main",
+  "version": "0.0.1",
+  "description": "Front/Backend for Controlling the fancy photo frame",
+  "main": " ",
+  "scripts": {
+    "build-frontend": "cd frontend/ && npm run build && cd ../",
+    "build-backend": "cd backend/ && npm run build && cd ../",
+    "build-all": "npm run build-frontend && npm run build-backend",
+    "move-built-frontend": "npx ncp ./frontend/build/ ./backend/public",
+    "bin-win": "cd backend && npm run build-bin-win && cd ../",
+    "bin-linux": "cd backend && npm run build-bin-linux && cd ../",
+    "build-binary-win": "npm run build-all && npm run move-built-frontend && npm run bin-win",
+    "build-binary-linux": "npm run build-all && npm run move-built-frontend && npm run bin-linux",
+    "build-binary-linux-with-docker": "npm run build-all && npm run move-built-frontend && npm run bin-linux && cd backend && ./docker_build.bat",
+    "install-all": "cd backend && npm i && cd ../frontend && npm i && cd ../",
+    "install-frontend": "cd frontend && npm i && cd ../",
+	"prep-arm-build": "npm run install-frontend && npm run build-frontend && npm run move-built-frontend"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Techno11/fancy-photo-frame.git"
+  },
+  "keywords": [
+    "photo",
+    "frame"
+  ],
+  "author": "Soren Zaiser",
+  "license": "Unlicense",
+  "bugs": {
+    "url": "https://github.com/Techno11/fancy-photo-frame/issues"
+  },
+  "homepage": "https://github.com/Techno11/fancy-photo-frame#readme"
+}
