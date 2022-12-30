@@ -1,5 +1,5 @@
 import {
-  Box, Button, CircularProgress, Dialog, DialogActions,
+  Box, CircularProgress, Dialog,
   DialogContent,
   DialogContentText,
   DialogTitle,
@@ -13,6 +13,7 @@ import {useSocket} from "../data/hooks/useSocket";
 import {Control} from "../models/SocketMessage";
 import WiFiNetwork from "../models/WifiNetwork";
 import WifiConnect from "../components/WifiConnect";
+import DebugDialog from "../components/DebugDialog";
 
 
 const styles =
@@ -57,14 +58,8 @@ const Home = () => {
   // Toggle Debug
   const [showDebug, setShowDebug] = useState<boolean>(false);
 
-  // Debug stats
-  const [debugStats, setDebugStats] = useState<{ last_time: Date, last_weather: Date, last_forecast: Date, last_photo: Date, socket_connected: string }>({
-    last_time: new Date(NaN),
-    last_weather: new Date(NaN),
-    last_forecast: new Date(NaN),
-    last_photo: new Date(NaN),
-    socket_connected: "Unknown"
-  });
+  // Connected
+  const [connected, setConnected] = useState<boolean>(false);
 
   // Socket
   const socket = useSocket();
@@ -72,31 +67,30 @@ const Home = () => {
   const needWifi = (networks: WiFiNetwork[]) => {
     setAvalNetworks(networks);
     setShowWifiConfig(true);
-    console.log("need wifi");
+    setShowDebug(false);
   }
 
   const internetDisconnected = () => setGotInternet(false);
   const internetConnected = () => {
     setGotInternet(true);
     setShowWifiConfig(false);
-    console.log("internet connected");
   }
 
   const startupInProgress = ({message}: { message: string }) => {
     setShowStartup(true);
     setStartupMessage(message);
-    console.log("Startup in progress", message);
   }
 
   const startupComplete = () => {
     setShowStartup(false);
-    console.log("Startup complete");
   }
 
   const getPhoto = () => socket.getPhoto().then(url => {
     if (photo.length > 0) URL.revokeObjectURL(photo);
     setPhoto(url);
   }).catch(console.log);
+
+  const onSocket = ({connected}: {connected: boolean}) => setConnected(connected);
 
   useEffect(() => {
     // Wifi networks
@@ -114,6 +108,11 @@ const Home = () => {
     socket.removeListener("startup-complete", startupComplete);
     socket.addListener("startup-complete", startupComplete);
 
+    // Connection listener
+    socket.removeListener("socket", onSocket);
+    socket.addListener("socket", onSocket);
+    setConnected(socket.getSocketStatus());
+
     // Photo Data
     socket.removeListener("photo", getPhoto);
     socket.addListener("photo", getPhoto);
@@ -126,24 +125,13 @@ const Home = () => {
     socket.getControl();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Fetch debug stats on load of dialog
-  useEffect(() => {
-    setDebugStats({
-      socket_connected: socket.getSocketStatus() ? "Connected" : "Disconnected",
-      last_time: socket.getLastTime(),
-      last_weather: socket.getLastWeather(),
-      last_forecast: socket.getLastForecast(),
-      last_photo: socket.getLastPhoto()
-    });
-  }, [showDebug]); // eslint-disable-line react-hooks/exhaustive-deps
-
   const openWifi = () => {
     socket.forceWifi();
   }
 
   return (
     <>
-      {!gotInternet &&
+      {!gotInternet && connected &&
         <Box
           sx={{
             position: "absolute",
@@ -157,6 +145,20 @@ const Home = () => {
           No internet connection. Tap here to connect...
         </Box>
       }
+      {!connected &&
+        <Box
+          sx={{
+            position: "absolute",
+            backgroundColor: "rgba(255, 0, 0, .5)",
+            textAlign: "center",
+            width: "100%",
+            zIndex: 100
+          }}
+          onClick={openWifi}
+        >
+          Not connected to server. Most functions won't work!
+        </Box>
+      }
       <Grid container direction={"row"} sx={{
         height: "100%",
         opacity: controlData.opacity,
@@ -165,14 +167,18 @@ const Home = () => {
         position: 'absolute',
         overflow: 'hidden'
       }}>
+        {/* Hello Component (Greeting, Weather, Time) */}
         <Grid item xs={7} sx={controlData.show_photo ? styles.mainIn : styles.mainOut}>
           <HelloComponent/>
         </Grid>
+
+        {/* Picture */}
         <Slide direction={'left'} in={controlData.show_photo} timeout={{enter: 500, exit: 500}}>
           <Grid item xs={5} sx={{height: "100%", textAlign: "right"}}>
             <img alt="Random" style={{objectFit: "contain", maxHeight: "100%", maxWidth: "100%"}} src={photo}/>
           </Grid>
         </Slide>
+
       </Grid>
 
       {/* Wifi Connection Dialog */}
@@ -187,24 +193,11 @@ const Home = () => {
       </Dialog>
 
       {/* Debug Window Trigger */}
-      <Box sx={{position: "absolute", bottom: 0, right: 0, zIndex: 100, width: 2, height: 2}}
+      <Box sx={{position: "absolute", bottom: 0, right: 0, zIndex: 100, width: 50, height: 50}}
            onClick={() => setShowDebug(true)}/>
 
       {/* Debug Window */}
-      <Dialog open={showDebug} sx={{zIndex: 101}} onClose={() => setShowDebug(false)}>
-        <DialogTitle>Debug Stats</DialogTitle>
-        <DialogContent>
-          <DialogContentText>Time Sent: {debugStats.last_time.toJSON()}</DialogContentText>
-          <DialogContentText>Forecast Sent: {debugStats.last_forecast.toJSON()}</DialogContentText>
-          <DialogContentText>Weather Sent: {debugStats.last_weather.toJSON()}</DialogContentText>
-          <DialogContentText>Photo Sent: {debugStats.last_photo.toJSON()}</DialogContentText>
-          <DialogContentText>Internet Connected: {gotInternet ? "Connected" : "Disconnected"}</DialogContentText>
-          <DialogContentText>Socket Connected: {debugStats.socket_connected}</DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowDebug(false)}>Close</Button>
-        </DialogActions>
-      </Dialog>
+      <DebugDialog open={showDebug} onClose={() => setShowDebug(false)} gotInternet={gotInternet} />
     </>
   )
 }

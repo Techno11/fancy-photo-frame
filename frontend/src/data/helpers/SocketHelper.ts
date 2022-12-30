@@ -1,6 +1,7 @@
 import {io, Socket} from "socket.io-client";
 import {EventEmitter} from "events"
 import {Theme} from "../../models/SocketMessage";
+import DebugInfo from "../../models/DebugInfo";
 
 export default class SocketHelper {
   private _path: string;
@@ -206,5 +207,18 @@ export default class SocketHelper {
   /** Get last photo message received time */
   public getLastPhoto() {
     return this._lastPhoto;
+  }
+
+  /** Get debug data */
+  public async getDebugData(): Promise<DebugInfo> {
+    return new Promise((resolve) => {
+      this._socket.once("debug", resolve);
+      this._socket.emit("get-debug");
+    });
+  }
+
+  /** Forget a given SSID */
+  public async forgetWifi(ssid: string) {
+    this._socket.emit("forget-wifi", {ssid: ssid});
   }
 }

@@ -19,3 +19,4 @@ const getOwnIp = async () => {
 }
 
 export default getLongLat;
+export { getOwnIp };

@@ -10,6 +10,7 @@ import {getTime, Greeting} from "./scheduleables/GetTime";
 import Control from "./models/Control";
 import PiWifi from "./scheduleables/Wifi";
 import got from "got";
+import getDebug from "./scheduleables/GetDebug";
 
 // Setup dotenv
 dotenv.config({path: path.join(__dirname, '../.env')});
@@ -108,6 +109,17 @@ io.on('connection', async (client: Socket) => {
       }
     })
   });
+
+  client.on('get-debug', async () => {
+    const debug = await getDebug(lonLat);
+    client.emit('debug', debug);
+  });
+
+  client.on('forget-wifi', async ({ssid}: {ssid: string}) => {
+    await wifi.deleteConnection(ssid);
+    const networks = await wifi.getNetworks();
+    client.emit('need-wifi', networks);
+  })
 
   client.on('restart', () => {
     process.exit(1);
