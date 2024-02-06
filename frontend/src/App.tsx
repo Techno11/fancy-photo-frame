@@ -1,26 +1,27 @@
-import * as React from 'react';
 import Home from "./views/Home";
-import {useCallback, useEffect, useState} from "preact/hooks";
-import Particles from "react-tsparticles";
-import type {Engine} from "tsparticles-engine";
+import {useEffect, useState} from "preact/hooks";
+import Particles, { initParticlesEngine } from "@tsparticles/react";
+import type {Engine} from "@tsparticles/engine";
 import * as PC from "./data/helpers/ParticleConfigs";
 import {ParticleLoader} from "./data/helpers/ParticleConfigs";
 import {useSocket} from "./data/hooks/useSocket";
 import {Theme} from "./models/SocketMessage";
-import {loadStarsPreset} from "tsparticles-preset-stars";
-import {loadSnowPreset} from "tsparticles-preset-snow";
-import {loadLinksPreset} from "tsparticles-preset-links";
-import {loadFirePreset} from "tsparticles-preset-fire";
-import {loadHeartShape} from "tsparticles-shape-heart";
-import {loadTextShape} from "tsparticles-shape-text";
-import {loadFireworksPreset} from "tsparticles-preset-fireworks";
-import {loadConfettiPreset} from "tsparticles-preset-confetti";
+import {loadStarsPreset} from "@tsparticles/preset-stars";
+import {loadSnowPreset} from "@tsparticles/preset-snow";
+import {loadLinksPreset} from "@tsparticles/preset-links";
+import {loadFirePreset} from "@tsparticles/preset-fire";
+import {loadHeartShape} from "@tsparticles/shape-heart";
+import {loadTextShape} from "@tsparticles/shape-text";
+import {loadFireworksPreset} from "@tsparticles/preset-fireworks";
+import {loadConfettiPreset} from "@tsparticles/preset-confetti";
+import { loadFull } from "tsparticles";
 
 export default function App() {
 
   const socket = useSocket();
   const [opts, setOpts] = useState<any>(PC.Links);
   const [loader, setLoader] = useState<ParticleLoader>(ParticleLoader.Links);
+  const [particleInit, setParticleInit] = useState<boolean>(false);
 
   useEffect(() => {
     socket.removeListener("theme", handleTheme)
@@ -28,6 +29,11 @@ export default function App() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
+    setParticleInit(false);
+    initParticlesEngine(async (engine) => {
+      await initCustomParticles(engine);
+      await loadFull(engine);
+    })
   }, [loader]);
 
   const handleTheme = ({weatherTheme, greetingTheme}: {weatherTheme: "snow" | "rain" | "clear" | "windy", greetingTheme: Theme}) => {
@@ -79,56 +85,56 @@ export default function App() {
     }
   }
 
-  const particlesInit = useCallback(async (engine: Engine) => {
-    switch(loader) {
+  const initCustomParticles = async (engine: Engine) => {
+    switch (loader) {
       case ParticleLoader.Stars:
         await loadStarsPreset(engine);
-        await engine.load("tsParticles", PC.Stars);
+        await engine.load({ id: "tsParticles", options: PC.Stars });
         break;
       case ParticleLoader.Snow:
         await loadSnowPreset(engine);
-        await engine.load("tsparticles", PC.Snow)
+        await engine.load({ id: "tsparticles", options: PC.Snow });
         break;
       case ParticleLoader.Links:
         await loadLinksPreset(engine);
-        await engine.load("tsparticles", PC.Links)
+        await engine.load({ id: "tsparticles", options: PC.Links });
         break;
       case ParticleLoader.Halloween:
         await loadFirePreset(engine);
-        await engine.load("tsparticles", PC.Halloween)
+        await engine.load({ id: "tsparticles", options: PC.Halloween });
         break;
       case ParticleLoader.Anniversary:
         await loadHeartShape(engine);
         await loadSnowPreset(engine);
-        await engine.load("tsparticles", PC.Anniversary)
+        await engine.load({ id: "tsparticles", options: PC.Anniversary });
         break;
       case ParticleLoader.Christmas:
         await loadTextShape(engine);
         await loadStarsPreset(engine);
-        await engine.load("tsparticles", PC.Christmas)
+        await engine.load({ id: "tsparticles", options: PC.Christmas });
         break;
       case ParticleLoader.Birthday:
         await loadTextShape(engine);
         await loadStarsPreset(engine);
-        await engine.load("tsparticles", PC.Birthday)
+        await engine.load({ id: "tsparticles", options: PC.Birthday });
         break;
       case ParticleLoader.Patriotic:
         await loadFireworksPreset(engine);
-        await engine.load("tsparticles", PC.Patriotic)
+        await engine.load({ id: "tsparticles", options: PC.Patriotic });
         break;
       case ParticleLoader.Rain:
         await loadConfettiPreset(engine);
         await loadSnowPreset(engine);
-        await engine.load("tsparticles", PC.Patriotic)
+        await engine.load({ id: "tsparticles", options: PC.Patriotic });
         break;
       default:
         await loadLinksPreset(engine);
-        await engine.load("tsparticles", PC.Links)
+        await engine.load({ id: "tsparticles", options: PC.Links });
         break;
     }
-  }, [loader]);
+  }
 
-  const style = {
+  const style: any = {
     height: '99vh',
     width: '99vw',
     overflow: 'hidden',
@@ -146,9 +152,8 @@ export default function App() {
 
   return (
     <div style={style}>
-      {/*/!* Views *!/*/}
-      <div key={loader} style={{zIndex: -1, position: "absolute"}}>
-        <Particles id="tsparticles" options={opts} init={particlesInit}  />
+      <div style={{zIndex: -1, position: "absolute"}}>
+        {particleInit && loader && <Particles id="tsparticles" options={opts} />}
       </div>
       <Home/>
     </div>

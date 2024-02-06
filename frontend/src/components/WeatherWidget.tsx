@@ -1,4 +1,3 @@
-import * as React from "react";
 import {CircularProgress, Grid, Typography} from "@mui/material";
 import {ArrowDropDown, ArrowDropUp} from "@mui/icons-material";
 import {Variant} from "@mui/material/styles/createTypography";

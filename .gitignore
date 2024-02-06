@@ -6,3 +6,4 @@ backend/public/*
 bin/
 backend/out/
 *.hex
+frontend/dist/*

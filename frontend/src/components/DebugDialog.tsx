@@ -10,7 +10,6 @@ import {
   Tab,
   Tabs, Typography
 } from "@mui/material";
-import * as React from "react";
 import DebugInfo, {LocalDebugInfo} from "../models/DebugInfo";
 import {useEffect, useState} from "preact/hooks";
 import {useSocket} from "../data/hooks/useSocket";

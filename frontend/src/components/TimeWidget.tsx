@@ -1,4 +1,3 @@
-import * as React from "react";
 import {Grid, Typography} from "@mui/material";
 import {Time} from "../models/SocketMessage";
 

@@ -4,7 +4,7 @@ import {Theme} from "../../models/SocketMessage";
 import DebugInfo from "../../models/DebugInfo";
 
 export default class SocketHelper {
-  private _path: string;
+  // private _path: string;
   private _socket: Socket;
   private _bgController: {weatherTheme: "snow" | "rain" | "clear" | "windy", greetingTheme: Theme}
   private _lastTime: Date = new Date(NaN);
@@ -15,7 +15,7 @@ export default class SocketHelper {
   private _emitter = new EventEmitter();
 
   constructor(path: string) {
-    this._path = path;
+    // this._path = path;
     this._bgController = {weatherTheme: "clear", greetingTheme: Theme.day};
 
     // Setup socket

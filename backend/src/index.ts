@@ -34,6 +34,7 @@ let fetchingForecast = {ref: false};
 let weather: Weather = {} as Weather;
 let fetchingWeather = {ref: false};
 let greeting: Greeting = {} as Greeting;
+let lastTime: string = "";
 let control: Control = {opacity: 100, show_photo: true};
 let needWifi = {ref: true};
 let gotInternet = {ref: false};
@@ -140,8 +141,7 @@ async function updateForecast(startup: boolean = false) {
   // If we're in startup, emit that we're fetching
   if(startup) io.emit("startup-in-progress", {message: "Fetching location..."});
   // Get LonLat
-  // TODO: Renable this
-  // await updateLongLat();
+  await updateLongLat();
   // If we're in startup, emit that we're fetching
   if(startup) io.emit("startup-in-progress", {message: "Fetching forecast..."});
   fetchingForecast.ref = true;
@@ -162,7 +162,10 @@ async function updateWeather(startup: boolean = false) {
 async function updateTime() {
   const full = getTime(greeting);
   greeting = full.greeting;
-  io.emit('time', full);
+  if(full.time_string !== lastTime) {
+    io.emit('time', full);
+    lastTime = full.time_string;
+  }
 }
 
 async function updatePhoto(){

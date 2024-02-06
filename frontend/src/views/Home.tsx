@@ -6,7 +6,6 @@ import {
   Grid,
   Slide
 } from "@mui/material";
-import * as React from "react";
 import HelloComponent from "../components/HelloComponent";
 import {useEffect, useState} from "preact/hooks";
 import {useSocket} from "../data/hooks/useSocket";

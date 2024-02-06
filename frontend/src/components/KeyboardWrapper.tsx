@@ -1,4 +1,3 @@
-import React from "react";
 import Keyboard from "react-simple-keyboard";
 import "react-simple-keyboard/build/css/index.css";
 import {useState} from "preact/hooks";
@@ -10,7 +9,7 @@ interface IProps {
 const KeyboardWrapper = ({onChange}: IProps) => {
   const [layoutName, setLayoutName] = useState("default");
 
-  const onKeyPress = (button: string, s: boolean) => {
+  const onKeyPress = (button: string) => {
     if (button === "{shift}" || button === "{lock}") {
       setLayoutName(layoutName === "default" ? "shift" : "default");
     }

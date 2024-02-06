@@ -10,7 +10,6 @@ import {
   List,
   ListItem, ListItemButton, ListItemIcon, TextField, Typography
 } from "@mui/material";
-import React from "react";
 import {ChevronLeft, Lock, LockOpen} from "@mui/icons-material";
 import {useSocket} from "../data/hooks/useSocket";
 import KeyboardWrapper from "./KeyboardWrapper";
@@ -79,7 +78,7 @@ const SelectedWifi = ({
         <>
           <TextField variant={"standard"} onChange={e => setPassword(e.target.value)} fullWidth label={"Password"}
                      type={showPassword ? "text" : "password"} value={password} autoFocus/>
-          <FormControlLabel control={<Checkbox onChange={e => setShowPassword(e.target.checked)}/>}
+          <FormControlLabel control={<Checkbox onChange={e => setShowPassword((e.target as any).checked)}/>}
                             label="Show Password"/>
           <Button sx={{mt: 1}} fullWidth onClick={doConnect} variant={"contained"}>Connect</Button>
           {error &&

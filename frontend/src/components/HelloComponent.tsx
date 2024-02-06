@@ -1,4 +1,3 @@
-import * as React from "react";
 import {Divider, Grid, Typography} from "@mui/material";
 import WeatherWidget from "./WeatherWidget";
 import TimeWidget from "./TimeWidget";
